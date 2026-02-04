@@ -101,9 +101,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
       setState(() {
         if (player == null) {
           _players.add(result);
-          _selectedPlayerIds.add(
-            result.id,
-          ); // Já seleciona o novo jogador por conveniência
+          _selectedPlayerIds.add(result.id);
         } else {
           final index = _players.indexWhere((p) => p.id == result.id);
           if (index != -1) _players[index] = result;
@@ -112,7 +110,6 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     }
   }
 
-  // Toggle Checkbox
   void _toggleSelection(String id) {
     setState(() {
       if (_selectedPlayerIds.contains(id)) {
@@ -123,42 +120,96 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     });
   }
 
+  String _getSortLabel() {
+    switch (_currentSort) {
+      case SortOption.nameAsc:
+        return 'Nome (A-Z)';
+      case SortOption.ratingDesc:
+        return 'Maior Nota';
+      case SortOption.ratingAsc:
+        return 'Menor Nota';
+      case SortOption.positionMain:
+        return 'Posição Principal';
+      case SortOption.positionSec:
+        return 'Posição Secundária';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayList = _filteredAndSortedPlayers;
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Racha Vôlei'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.sports_volleyball, size: 28),
+            SizedBox(width: 8),
+            Text('Racha Vôlei'),
+          ],
+        ),
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
-          // Menu de Ordenação
           PopupMenuButton<SortOption>(
             icon: const Icon(Icons.sort),
+            tooltip: 'Ordenar',
             onSelected: (SortOption item) {
               setState(() => _currentSort = item);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<SortOption>>[
               const PopupMenuItem(
                 value: SortOption.nameAsc,
-                child: Text('Ordem Alfabética'),
+                child: Row(
+                  children: [
+                    Icon(Icons.sort_by_alpha, size: 20),
+                    SizedBox(width: 8),
+                    Text('Ordem Alfabética'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: SortOption.ratingDesc,
-                child: Text('Maior Nota'),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up, size: 20),
+                    SizedBox(width: 8),
+                    Text('Maior Nota'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: SortOption.ratingAsc,
-                child: Text('Menor Nota'),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_down, size: 20),
+                    SizedBox(width: 8),
+                    Text('Menor Nota'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: SortOption.positionMain,
-                child: Text('Agrupar Posição (Princ.)'),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 20),
+                    SizedBox(width: 8),
+                    Text('Posição Principal'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: SortOption.positionSec,
-                child: Text('Agrupar Posição (Sec.)'),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Posição Secundária'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -166,14 +217,41 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
       ),
       body: Column(
         children: [
-          // --- Barra de Pesquisa ---
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Colors.blueAccent,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Ordenado por: ${_getSortLabel()}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar jogador...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, color: Colors.blueAccent),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -184,139 +262,287 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                       )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
 
-          // --- Contador de Selecionados ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${_selectedPlayerIds.length} selecionados',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Selecionar/Deselecionar todos da lista filtrada
-                    setState(() {
-                      final allIds = displayList.map((e) => e.id).toSet();
-                      if (_selectedPlayerIds.containsAll(allIds)) {
-                        _selectedPlayerIds.removeAll(allIds);
-                      } else {
-                        _selectedPlayerIds.addAll(allIds);
-                      }
-                    });
-                  },
-                  child: const Text('Selecionar Todos'),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.people,
+                          color: Colors.blueAccent,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_selectedPlayerIds.length} selecionados',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '${displayList.length} total',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        final allIds = displayList.map((e) => e.id).toSet();
+                        if (_selectedPlayerIds.containsAll(allIds)) {
+                          _selectedPlayerIds.removeAll(allIds);
+                        } else {
+                          _selectedPlayerIds.addAll(allIds);
+                        }
+                      });
+                    },
+                    icon: Icon(
+                      _selectedPlayerIds.containsAll(
+                            displayList.map((e) => e.id),
+                          )
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
+                      size: 20,
+                    ),
+                    label: const Text('Todos'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blueAccent,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 12),
 
-          // --- Lista de Jogadores ---
           Expanded(
             child: displayList.isEmpty
-                ? const Center(child: Text('Nenhum jogador encontrado.'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nenhum jogador encontrado',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.separated(
                     padding: const EdgeInsets.only(
                       bottom: 80,
-                      left: 10,
-                      right: 10,
+                      left: 16,
+                      right: 16,
                     ),
                     itemCount: displayList.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 6),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (ctx, index) {
                       final player = displayList[index];
                       final isSelected = _selectedPlayerIds.contains(player.id);
 
-                      return Card(
-                        elevation: isSelected ? 4 : 1,
-                        color: isSelected ? Colors.blue.shade50 : Colors.white,
-                        shape: RoundedRectangleBorder(
-                          side: isSelected
-                              ? const BorderSide(
-                                  color: Colors.blueAccent,
-                                  width: 2,
-                                )
-                              : BorderSide.none,
-                          borderRadius: BorderRadius.circular(12),
+                      return Dismissible(
+                        key: Key(player.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                            size: 32,
+                          ),
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => _openPlayerForm(
-                            player,
-                          ), // Editar ao clicar no corpo
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                // Checkbox
-                                Transform.scale(
-                                  scale: 1.2,
-                                  child: Checkbox(
-                                    value: isSelected,
-                                    activeColor: Colors.blueAccent,
-                                    shape: const CircleBorder(),
-                                    onChanged: (val) =>
-                                        _toggleSelection(player.id),
-                                  ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Confirmar Exclusão'),
+                              content: Text('Deseja excluir ${player.name}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(false),
+                                  child: const Text('Cancelar'),
                                 ),
-                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.of(ctx).pop(true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Excluir'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) {
+                          setState(() {
+                            _players.removeWhere((p) => p.id == player.id);
+                            _selectedPlayerIds.remove(player.id);
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${player.name} foi removido'),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        child: Card(
+                          elevation: isSelected ? 4 : 2,
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : Colors.white,
+                          shadowColor: isSelected
+                              ? Colors.blueAccent.withValues(alpha: 0.3)
+                              : Colors.black12,
+                          shape: RoundedRectangleBorder(
+                            side: isSelected
+                                ? const BorderSide(
+                                    color: Colors.blueAccent,
+                                    width: 2,
+                                  )
+                                : BorderSide.none,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _openPlayerForm(player),
+                            child: Padding(
+                              padding: const EdgeInsets.all(14.0),
+                              child: Row(
+                                children: [
+                                  Transform.scale(
+                                    scale: 1.3,
+                                    child: Checkbox(
+                                      value: isSelected,
+                                      activeColor: Colors.blueAccent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      onChanged: (val) =>
+                                          _toggleSelection(player.id),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
 
-                                // Infos do Jogador
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        player.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          player.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
                                         ),
+                                        const SizedBox(height: 6),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            _buildBadge(
+                                              player.position,
+                                              Colors.blueAccent,
+                                              Icons.sports_volleyball,
+                                            ),
+                                            if (player.secondPosition !=
+                                                'Nenhuma')
+                                              _buildBadge(
+                                                player.secondPosition,
+                                                Colors.grey.shade600,
+                                                Icons
+                                                    .sports_volleyball_outlined,
+                                              ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Column(
+                                    children: [
+                                      StarRating(
+                                        rating: double.parse(player.rating),
+                                        size: 16,
                                       ),
                                       const SizedBox(height: 4),
-                                      // Badges de Posição
-                                      Wrap(
-                                        spacing: 4,
-                                        children: [
-                                          _buildBadge(
-                                            player.position,
-                                            Colors.blueAccent,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withValues(
+                                            alpha: 0.2,
                                           ),
-                                          if (player.secondPosition !=
-                                              'Nenhuma')
-                                            _buildBadge(
-                                              player.secondPosition,
-                                              Colors.grey,
-                                            ),
-                                        ],
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
-
-                                Column(
-                                  children: [
-                                    StarRating(
-                                      rating: double.parse(player.rating),
-                                      size: 16,
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -326,30 +552,38 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
           ),
         ],
       ),
-
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openPlayerForm(null),
         backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add, color: Colors.white),
+        foregroundColor: Colors.white,
+        label: const Text('+'),
+        elevation: 4,
       ),
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
+  Widget _buildBadge(String text, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -42,12 +42,9 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
     _nameController = TextEditingController(text: widget.player?.name ?? '');
     _position = widget.player?.position ?? _positions.last;
     _secondPosition = widget.player?.secondPosition ?? _secondPositions.last;
+
     double initialRating = double.tryParse(widget.player?.rating ?? '') ?? 3.0;
-    if (initialRating < 0.5) {
-      _rating = 0.5;
-    } else {
-      _rating = initialRating;
-    }
+    _rating = initialRating < 0.5 ? 0.5 : initialRating;
   }
 
   @override
@@ -92,15 +89,14 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                     icon: const Icon(Icons.close, color: Colors.red, size: 28),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-
                   Text(
                     widget.player == null ? 'Novo Jogador' : 'Editar Jogador',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Colors.blueAccent,
                     ),
                   ),
-
                   IconButton(
                     icon: const Icon(
                       Icons.check,
@@ -111,17 +107,34 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                   ),
                 ],
               ),
-              const Divider(),
-              const SizedBox(height: 10),
+              const Divider(thickness: 1.5),
+              const SizedBox(height: 20),
 
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Nome do Jogador',
+                  hintText: 'Digite o nome completo',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.person),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.blueAccent,
+                      width: 2,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.person,
+                    color: Colors.blueAccent,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -130,7 +143,7 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
 
               Row(
                 children: [
@@ -141,17 +154,39 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                       decoration: InputDecoration(
                         labelText: 'Posição Principal',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: const Icon(Icons.sports_volleyball),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.blueAccent,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.sports_volleyball,
+                          color: Colors.blueAccent,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       items: _positions.map((pos) {
-                        return DropdownMenuItem(value: pos, child: Text(pos));
+                        return DropdownMenuItem(
+                          value: pos,
+                          child: Text(
+                            pos,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        );
                       }).toList(),
                       onChanged: (value) => setState(() => _position = value!),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       isExpanded: true,
@@ -159,12 +194,34 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                       decoration: InputDecoration(
                         labelText: 'Posição Secundária',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: const Icon(Icons.sports_volleyball),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.blueAccent,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.sports_volleyball_outlined,
+                          color: Colors.grey,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
-                      items: _positions.map((pos) {
-                        return DropdownMenuItem(value: pos, child: Text(pos));
+                      items: _secondPositions.map((pos) {
+                        return DropdownMenuItem(
+                          value: pos,
+                          child: Text(
+                            pos,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        );
                       }).toList(),
                       onChanged: (value) =>
                           setState(() => _secondPosition = value!),
@@ -172,45 +229,104 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
 
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Nota',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.blueAccent,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.blueAccent.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Avaliação',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: Colors.blueAccent,
+                        inactiveTrackColor: Colors.blueAccent.withValues(
+                          alpha: 0.3,
+                        ),
+                        thumbColor: Colors.blueAccent,
+                        overlayColor: Colors.blueAccent.withValues(alpha: 0.2),
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 12,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 20,
                         ),
                       ),
-                    ],
-                  ),
-                  Slider(
-                    value: _rating < 0.5 ? 0.5 : _rating,
-                    min: 0.5,
-                    max: 5.0,
-                    divisions: 9,
-                    label: _rating.toString(),
-                    activeColor: Colors.blueAccent,
-                    onChanged: (val) => setState(() => _rating = val),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      if (_rating >= index + 1) {
-                        return const Icon(Icons.star, color: Colors.amber);
-                      }
-                      if (_rating >= index + 0.5) {
-                        return const Icon(Icons.star_half, color: Colors.amber);
-                      }
-                      return const Icon(Icons.star_border, color: Colors.amber);
-                    }),
-                  ),
-                ],
+                      child: Slider(
+                        value: _rating < 0.5 ? 0.5 : _rating,
+                        min: 0.5,
+                        max: 5.0,
+                        divisions: 9,
+                        label: _rating.toStringAsFixed(1),
+                        onChanged: (val) => setState(() => _rating = val),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        if (_rating >= index + 1) {
+                          return const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: 28,
+                          );
+                        }
+                        if (_rating >= index + 0.5) {
+                          return const Icon(
+                            Icons.star_half,
+                            color: Colors.amber,
+                            size: 28,
+                          );
+                        }
+                        return Icon(
+                          Icons.star_border,
+                          color: Colors.amber.shade200,
+                          size: 28,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(height: 10),
             ],
           ),
         ),

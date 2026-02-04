@@ -14,8 +14,11 @@ class TiraTimeApp extends StatelessWidget {
       title: 'Gerenciador de Racha',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueAccent,
+        ), // FIX: Adicionado "ColorScheme"
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 2),
       ),
       home: const PlayersListScreen(),
     );
