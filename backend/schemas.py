@@ -5,9 +5,10 @@ from enum     import Enum
 
 class Position(str, Enum):
     LEVANTADOR = "Levantador"
-    OPOSTO = "Oposto"
-    LIBERO = "Líbero"
-    PONTEIRO = "Ponteiro"
+    PONTEIRO   = "Ponteiro"
+    OPOSTO     = "Oposto"
+    LIBERO     = "Líbero"
+    QUALQUER   = "Qualquer"
     
 class PlayerBase(BaseModel):
     id: int
