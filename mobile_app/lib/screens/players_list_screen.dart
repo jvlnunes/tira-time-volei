@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/player_model.dart';
 import '../widgets/star_rating.dart';
 import 'player_form_sheet.dart';
+import 'pre_draw_screen.dart';
 
 enum SortOption { nameAsc, ratingDesc, ratingAsc, positionMain, positionSec }
 
@@ -17,42 +18,42 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     Player(
       id: '1',
       name: 'Jv Nunes',
-      rating: '4.5',
+      rating: 4.5,
       position: 'Levantador',
       secondPosition: 'Qualquer',
     ),
     Player(
       id: '2',
       name: 'Ph Nunes',
-      rating: '4',
+      rating: 4,
       position: 'Ponteiro',
       secondPosition: 'Qualquer',
     ),
     Player(
       id: '3',
       name: 'Royce',
-      rating: '5',
+      rating: 5,
       position: 'Oposto',
       secondPosition: 'Qualquer',
     ),
     Player(
       id: '4',
       name: 'Gabi',
-      rating: '2',
+      rating: 2,
       position: 'Líbero',
       secondPosition: 'Qualquer',
     ),
     Player(
       id: '5',
       name: 'Felipe',
-      rating: '4.5',
+      rating: 4.5,
       position: 'Qualquer',
       secondPosition: 'Qualquer',
     ),
     Player(
       id: '6',
       name: 'Rauan',
-      rating: '3.5',
+      rating: 3.5,
       position: 'Qualquer',
       secondPosition: 'Levantador',
     ),
@@ -120,6 +121,98 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     });
   }
 
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Icon(Icons.sort, color: Colors.blueAccent),
+                  SizedBox(width: 12),
+                  Text(
+                    'Ordenar por',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 32),
+            _buildSortOption(
+              SortOption.nameAsc,
+              'Ordem Alfabética',
+              Icons.sort_by_alpha,
+            ),
+            _buildSortOption(
+              SortOption.ratingDesc,
+              'Maior Nota',
+              Icons.trending_up,
+            ),
+            _buildSortOption(
+              SortOption.ratingAsc,
+              'Menor Nota',
+              Icons.trending_down,
+            ),
+            _buildSortOption(
+              SortOption.positionMain,
+              'Posição Principal',
+              Icons.location_on,
+            ),
+            _buildSortOption(
+              SortOption.positionSec,
+              'Posição Secundária',
+              Icons.location_on_outlined,
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortOption(SortOption option, String label, IconData icon) {
+    final isSelected = _currentSort == option;
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isSelected ? Colors.blueAccent : Colors.grey.shade600,
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.blueAccent : Colors.black87,
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: Colors.blueAccent)
+          : null,
+      onTap: () {
+        setState(() => _currentSort = option);
+        Navigator.pop(context);
+      },
+    );
+  }
+
   String _getSortLabel() {
     switch (_currentSort) {
       case SortOption.nameAsc:
@@ -133,6 +226,44 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
       case SortOption.positionSec:
         return 'Posição Secundária';
     }
+  }
+
+  IconData _getSortIcon() {
+    switch (_currentSort) {
+      case SortOption.nameAsc:
+        return Icons.sort_by_alpha;
+      case SortOption.ratingDesc:
+        return Icons.trending_up;
+      case SortOption.ratingAsc:
+        return Icons.trending_down;
+      case SortOption.positionMain:
+        return Icons.location_on;
+      case SortOption.positionSec:
+        return Icons.location_on_outlined;
+    }
+  }
+
+  void _goToPreDraw() {
+    if (_selectedPlayerIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione pelo menos um jogador para sortear times'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final selectedPlayers = _players
+        .where((player) => _selectedPlayerIds.contains(player.id))
+        .toList();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => PreDrawScreen(selectedPlayers: selectedPlayers),
+      ),
+    );
   }
 
   @override
@@ -154,94 +285,47 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          PopupMenuButton<SortOption>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Ordenar',
-            onSelected: (SortOption item) {
-              setState(() => _currentSort = item);
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<SortOption>>[
-              const PopupMenuItem(
-                value: SortOption.nameAsc,
-                child: Row(
-                  children: [
-                    Icon(Icons.sort_by_alpha, size: 20),
-                    SizedBox(width: 8),
-                    Text('Ordem Alfabética'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: SortOption.ratingDesc,
-                child: Row(
-                  children: [
-                    Icon(Icons.trending_up, size: 20),
-                    SizedBox(width: 8),
-                    Text('Maior Nota'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: SortOption.ratingAsc,
-                child: Row(
-                  children: [
-                    Icon(Icons.trending_down, size: 20),
-                    SizedBox(width: 8),
-                    Text('Menor Nota'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: SortOption.positionMain,
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, size: 20),
-                    SizedBox(width: 8),
-                    Text('Posição Principal'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: SortOption.positionSec,
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, size: 20),
-                    SizedBox(width: 8),
-                    Text('Posição Secundária'),
-                  ],
-                ),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.person_add, size: 28),
+            tooltip: 'Adicionar Jogador',
+            onPressed: () => _openPlayerForm(null),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.blueAccent,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Ordenado por: ${_getSortLabel()}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
+          InkWell(
+            onTap: _showSortOptions,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.blueAccent,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(_getSortIcon(), color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Ordenado por: ${_getSortLabel()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.expand_more, color: Colors.white, size: 18),
+                ],
+              ),
             ),
           ),
 
@@ -518,29 +602,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                                     ),
                                   ),
 
-                                  Column(
-                                    children: [
-                                      StarRating(
-                                        rating: double.parse(player.rating),
-                                        size: 16,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber.withValues(
-                                            alpha: 0.2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  StarRating(rating: player.rating, size: 16),
                                 ],
                               ),
                             ),
@@ -552,11 +614,13 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openPlayerForm(null),
-        backgroundColor: Colors.blueAccent,
+        onPressed: _goToPreDraw,
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
-        label: const Text('+'),
+        icon: const Icon(Icons.shuffle),
+        label: const Text('Sortear Times'),
         elevation: 4,
       ),
     );

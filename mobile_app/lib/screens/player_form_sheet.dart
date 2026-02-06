@@ -43,7 +43,7 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
     _position = widget.player?.position ?? _positions.last;
     _secondPosition = widget.player?.secondPosition ?? _secondPositions.last;
 
-    double initialRating = double.tryParse(widget.player?.rating ?? '') ?? 3.0;
+    double initialRating = widget.player?.rating ?? 3.0;
     _rating = initialRating < 0.5 ? 0.5 : initialRating;
   }
 
@@ -60,7 +60,7 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
         name: _nameController.text,
         position: _position,
         secondPosition: _secondPosition,
-        rating: _rating.toString(),
+        rating: _rating,
       );
 
       Navigator.of(context).pop(newPlayer);

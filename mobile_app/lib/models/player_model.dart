@@ -1,7 +1,7 @@
 class Player {
   final String id;
   final String name;
-  final String rating;
+  final double rating;
   final String position;
   final String secondPosition;
 
@@ -13,4 +13,24 @@ class Player {
 
     this.secondPosition = 'Nenhuma',
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'rating': rating,
+      'position': position,
+      'secondPosition': secondPosition,
+    };
+  }
+
+  factory Player.fromMap(Map<String, dynamic> map) {
+    return Player(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      rating: (map['rating'] as num).toDouble(),
+      position: map['position'] as String,
+      secondPosition: map['secondPosition'] as String ?? 'Nenhuma',
+    );
+  }
 }
