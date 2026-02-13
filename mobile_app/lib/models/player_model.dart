@@ -4,6 +4,7 @@ class Player {
   final double rating;
   final String position;
   final String secondPosition;
+  final DateTime createdAt;
 
   Player({
     required this.id,
@@ -12,7 +13,9 @@ class Player {
     required this.position,
 
     this.secondPosition = 'Nenhuma',
-  });
+
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,6 +24,7 @@ class Player {
       'rating': rating,
       'position': position,
       'secondPosition': secondPosition,
+      'createdAt': createdAt.millisecondsSinceEpoch,
     };
   }
 
@@ -30,7 +34,10 @@ class Player {
       name: map['name'] as String,
       rating: (map['rating'] as num).toDouble(),
       position: map['position'] as String,
-      secondPosition: map['secondPosition'] as String ?? 'Nenhuma',
+      secondPosition: map['secondPosition'] as String,
+      createdAt: map['createdAt'] != null
+          ? DateTime.fromMicrosecondsSinceEpoch(map['createdAt'] as int)
+          : DateTime.now(),
     );
   }
 }

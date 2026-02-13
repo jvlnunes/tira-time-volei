@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import '../models/player_model.dart';
 import '../database/database_manager.dart';
 import '../widgets/star_rating.dart';
-import 'player_form_sheet.dart';
 import 'pre_draw_screen.dart';
 
 enum SortOption { nameAsc, ratingDesc, ratingAsc, positionMain, positionSec }
 
-class PlayersListScreen extends StatefulWidget {
-  const PlayersListScreen({super.key});
+class QuickDrawScreen extends StatefulWidget {
+  const QuickDrawScreen({super.key});
 
   @override
-  State<PlayersListScreen> createState() => _PlayersListScreenState();
+  State<QuickDrawScreen> createState() => _QuickDrawScreenState();
 }
 
-class _PlayersListScreenState extends State<PlayersListScreen> {
+class _QuickDrawScreenState extends State<QuickDrawScreen> {
   List<Player> _players = [];
   Set<String> _selectedPlayerIds = {};
   String _searchQuery = '';
@@ -73,106 +72,6 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     }
 
     return list;
-  }
-
-  void _openPlayerForm(Player? player) async {
-    final Player? result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => PlayerFormSheet(player: player),
-    );
-
-    if (result != null) {
-      try {
-        if (player == null) {
-          await DatabaseManager.instance.createPlayer(result);
-          _selectedPlayerIds.add(result.id);
-        } else {
-          await DatabaseManager.instance.updatePlayer(result);
-        }
-        await _loadPlayers();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                player == null
-                    ? '${result.name} foi adicionado!'
-                    : '${result.name} foi atualizado!',
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao salvar jogador: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  void _deletePlayer(Player player) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-          'Deseja realmente excluir ${player.name}?\n\nEsta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await DatabaseManager.instance.deletePlayer(player.id);
-        setState(() {
-          _players.removeWhere((p) => p.id == player.id);
-          _selectedPlayerIds.remove(player.id);
-        });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${player.name} foi removido'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao remover: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        await _loadPlayers();
-      }
-    }
   }
 
   void _toggleSelection(String id) {
@@ -325,7 +224,8 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (ctx) => PreDrawScreen(selectedPlayers: selectedPlayers),
+        builder: (ctx) =>
+            PreDrawScreen(selectedPlayers: selectedPlayers, isQuickDraw: true),
       ),
     );
   }
@@ -337,25 +237,10 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sports_volleyball, size: 28),
-            SizedBox(width: 8),
-            Text('Jogadores'),
-          ],
-        ),
-        backgroundColor: Colors.blueAccent,
+        title: const Text('Sorteio Rápido'),
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add, size: 28),
-            tooltip: 'Adicionar Jogador',
-            onPressed: () => _openPlayerForm(null),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -369,7 +254,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: const BoxDecoration(
-                      color: Colors.blueAccent,
+                      color: Colors.green,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black12,
@@ -407,10 +292,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Buscar jogador...',
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: Colors.blueAccent,
-                      ),
+                      prefixIcon: const Icon(Icons.search, color: Colors.green),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear),
@@ -458,12 +340,12 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.blueAccent.withValues(alpha: 0.1),
+                                color: Colors.green.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
                                 Icons.people,
-                                color: Colors.blueAccent,
+                                color: Colors.green,
                                 size: 20,
                               ),
                             ),
@@ -512,7 +394,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                           ),
                           label: const Text('Todos'),
                           style: TextButton.styleFrom(
-                            foregroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.green,
                           ),
                         ),
                       ],
@@ -562,15 +444,15 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                             return Card(
                               elevation: isSelected ? 4 : 2,
                               color: isSelected
-                                  ? Colors.blue.shade50
+                                  ? Colors.green.shade50
                                   : Colors.white,
                               shadowColor: isSelected
-                                  ? Colors.blueAccent.withValues(alpha: 0.3)
+                                  ? Colors.green.withValues(alpha: 0.3)
                                   : Colors.black12,
                               shape: RoundedRectangleBorder(
                                 side: isSelected
                                     ? const BorderSide(
-                                        color: Colors.blueAccent,
+                                        color: Colors.green,
                                         width: 2,
                                       )
                                     : BorderSide.none,
@@ -587,7 +469,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                                         scale: 1.3,
                                         child: Checkbox(
                                           value: isSelected,
-                                          activeColor: Colors.blueAccent,
+                                          activeColor: Colors.green,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               4,
@@ -618,7 +500,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                                               children: [
                                                 _buildBadge(
                                                   player.position,
-                                                  Colors.blueAccent,
+                                                  Colors.green,
                                                   Icons.sports_volleyball,
                                                 ),
                                                 if (player.secondPosition !=
@@ -638,30 +520,6 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                                       StarRating(
                                         rating: player.rating,
                                         size: 16,
-                                      ),
-                                      const SizedBox(width: 8),
-
-                                      // Botão de editar
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blueAccent,
-                                          size: 22,
-                                        ),
-                                        onPressed: () =>
-                                            _openPlayerForm(player),
-                                        tooltip: 'Editar',
-                                      ),
-
-                                      // Botão de deletar
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 22,
-                                        ),
-                                        onPressed: () => _deletePlayer(player),
-                                        tooltip: 'Excluir',
                                       ),
                                     ],
                                   ),
@@ -696,13 +554,13 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withValues(alpha: 0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.people_outline,
                 size: 80,
-                color: Colors.blueAccent.withValues(alpha: 0.7),
+                color: Colors.green.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -716,77 +574,12 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Comece adicionando jogadores para poder sortear times!',
+              'Cadastre jogadores primeiro para poder fazer sorteios!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
                 height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => _openPlayerForm(null),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              icon: const Icon(Icons.person_add, size: 24),
-              label: const Text(
-                'Adicionar Primeiro Jogador',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 48),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.amber.shade200, width: 1),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: Colors.amber.shade700,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Dica',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.amber.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Você pode adicionar:\n'
-                    '• Nome do jogador\n'
-                    '• Posições (principal e secundária)\n'
-                    '• Avaliação de 0.5 a 5 estrelas\n\n'
-                    'Depois é só selecionar os jogadores e sortear times balanceados!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.amber.shade900,
-                      height: 1.6,
-                    ),
-                  ),
-                ],
               ),
             ),
           ],

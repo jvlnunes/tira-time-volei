@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/player_model.dart';
+import '../models/team_model.dart';
+import '../services/draw_service.dart';
+import 'draw_result_screen.dart';
 
 class PreDrawScreen extends StatefulWidget {
   final List<Player> selectedPlayers;
+  final bool isQuickDraw;
 
-  const PreDrawScreen({super.key, required this.selectedPlayers});
+  const PreDrawScreen({
+    super.key,
+    required this.selectedPlayers,
+    this.isQuickDraw = false,
+  });
 
   @override
   State<PreDrawScreen> createState() => _PreDrawScreenState();
@@ -16,6 +24,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
 
   bool _balanceByRating = true;
   bool _ensureSetterPerTeam = true;
+  bool _useOptimizedDraw = true;
 
   double get _averageRating {
     if (widget.selectedPlayers.isEmpty) return 0;
@@ -46,14 +55,72 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
     return "$base a ${base + 1}";
   }
 
-  void _performDraw() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Iniciando sorteio com as regras definidas...'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
+  void _performDraw() async {
+    // Mostra loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
     );
+
+    // Aguarda um pouco para dar sensaÃ§Ã£o de processamento
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    try {
+      Map<String, dynamic> result;
+
+      if (_useOptimizedDraw) {
+        result = DrawService.drawTeamsOptimized(
+          players: widget.selectedPlayers,
+          numberOfTeams: _numberOfTeams,
+          ensureSetters: _ensureSetterPerTeam,
+          balanceRatings: _balanceByRating,
+          attempts: 20,
+        );
+      } else {
+        result = DrawService.drawTeams(
+          players: widget.selectedPlayers,
+          numberOfTeams: _numberOfTeams,
+          ensureSetters: _ensureSetterPerTeam,
+          balanceRatings: _balanceByRating,
+        );
+      }
+
+      if (!mounted) return;
+
+      // Remove loading
+      Navigator.pop(context);
+
+      // Navega para resultado
+      final shouldRedraw = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (ctx) => DrawResultScreen(
+            teams: result['teams'] as List<Team>,
+            subs: result['subs'] as List<Player>,
+            warnings: result['warnings'] as List<String>,
+          ),
+        ),
+      );
+
+      // Se retornou true, faz novo sorteio
+      if (shouldRedraw == true && mounted) {
+        _performDraw();
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      // Remove loading
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao sortear times: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showCustomTeamDialog() {
@@ -61,7 +128,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Número de Times'),
+        title: const Text('NÃºmero de Times'),
         content: TextField(
           controller: customController,
           keyboardType: TextInputType.number,
@@ -132,7 +199,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
                 ),
                 _buildStatCard(
                   icon: Icons.star,
-                  label: 'Média Geral',
+                  label: 'MÃ©dia Geral',
                   value: _averageRating.toStringAsFixed(1),
                   color: Colors.amber,
                 ),
@@ -146,7 +213,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Número de Times'),
+                  _buildSectionTitle('NÃºmero de Times'),
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -209,7 +276,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Formação',
+                                  'FormaÃ§Ã£o',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
@@ -275,8 +342,8 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
                           ),
                           subtitle: Text(
                             _balanceByRating
-                                ? 'Tenta manter a média de estrelas igual.'
-                                : 'Sorteio totalmente aleatório.',
+                                ? 'Tenta manter a mÃ©dia de estrelas igual.'
+                                : 'Sorteio totalmente aleatÃ³rio.',
                             style: const TextStyle(fontSize: 12),
                           ),
                           value: _balanceByRating,
@@ -308,6 +375,26 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
                           onChanged: (val) =>
                               setState(() => _ensureSetterPerTeam = val),
                         ),
+                        const Divider(height: 1),
+
+                        SwitchListTile(
+                          title: const Text(
+                            'Sorteio Otimizado',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: const Text(
+                            'Testa vÃ¡rias combinaÃ§Ãµes e escolhe a melhor.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          value: _useOptimizedDraw,
+                          activeThumbColor: Colors.purple,
+                          secondary: const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.purple,
+                          ),
+                          onChanged: (val) =>
+                              setState(() => _useOptimizedDraw = val),
+                        ),
                       ],
                     ),
                   ),
@@ -316,7 +403,7 @@ class _PreDrawScreenState extends State<PreDrawScreen> {
 
                   Center(
                     child: Text(
-                      'Visualizando ${widget.selectedPlayers.length} jogadores disponíveis',
+                      'Visualizando ${widget.selectedPlayers.length} jogadores disponÃ­veis',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 12,

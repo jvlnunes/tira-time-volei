@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/player_model.dart';
+import '../database/database_manager.dart';
 
 class PlayerFormSheet extends StatefulWidget {
   final Player? player;
@@ -22,7 +23,8 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
     'Levantador',
     'Ponteiro',
     'Oposto',
-    'Líbero',
+    'Central',
+    'LÃ­bero',
     'Qualquer',
   ];
 
@@ -30,7 +32,8 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
     'Levantador',
     'Ponteiro',
     'Oposto',
-    'Líbero',
+    'Central',
+    'LÃ­bero',
     'Qualquer',
     'Nenhuma',
   ];
@@ -53,11 +56,33 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
+      // Verifica se já existe um jogador com este nome (exceto ele mesmo se estiver editando)
+      final nameExists = await DatabaseManager.instance.playerExistsByName(
+        _nameController.text.trim(),
+      );
+
+      if (nameExists &&
+          widget.player?.name.toLowerCase() !=
+              _nameController.text.trim().toLowerCase()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Já existe um jogador com o nome "${_nameController.text}"',
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
       final newPlayer = Player(
         id: widget.player?.id ?? DateTime.now().toString(),
-        name: _nameController.text,
+        name: _nameController.text.trim(),
         position: _position,
         secondPosition: _secondPosition,
         rating: _rating,
@@ -192,7 +217,7 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                       isExpanded: true,
                       initialValue: _secondPosition,
                       decoration: InputDecoration(
-                        labelText: 'Posição Secundária',
+                        labelText: 'Secundária',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -246,7 +271,7 @@ class _PlayerFormSheetState extends State<PlayerFormSheet> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Avaliação',
+                          'AvaliaÃ§Ã£o',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

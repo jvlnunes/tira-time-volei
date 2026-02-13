@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/players_list_screen.dart';
+// import 'screens/players_list_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const TiraTimeApp());
@@ -18,7 +19,7 @@ class TiraTimeApp extends StatelessWidget {
         useMaterial3: true,
         appBarTheme: const AppBarTheme(centerTitle: true, elevation: 2),
       ),
-      home: const PlayersListScreen(),
+      home: const HomeScreen(),
     );
   }
 }
